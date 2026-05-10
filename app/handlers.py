@@ -117,7 +117,7 @@ async def cmd_getSuit(message: Message):
 
 
 #================ОБРАЩЕНИЕ К МЭРУ================
-@router.message(AppealsToMayor.appeals, F.text == 'Обратиться к Мэру Города 💬')
+@router.message(F.text == 'Обратиться к Мэру Города 💬')
 async def cmd_appealtoMayor(message: Message, state: FSMContext):
     await state.set_state(AppealsToMayor.appeals)
     await state.update_data(user_messages=[])
@@ -127,7 +127,7 @@ async def cmd_appealtoMayor(message: Message, state: FSMContext):
 
 
 
-@router.message(AppealsToMayor.appeals, F.text != 'Подтвердить')
+@router.message(AppealsToMayor.appeals)
 async def process_newmessageToMayor(message: Message, state: FSMContext):
     messages_list = await state.get_data()
     current_list = messages_list.get("user_messages", [])
@@ -147,7 +147,7 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
     current_list = messages_list.get("user_messages", [])
     if message.text != 'Назад в меню':
         await state.update_data(user_messages=current_list)
-        data = state.get_data()
+        data = await state.get_data()
         admin_text = (
             f"Новое обращение к Мэру!\n\n"
             f"❓ Обращение: {data['appeals']}\n"
