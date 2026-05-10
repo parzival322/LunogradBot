@@ -21,6 +21,6 @@ main_menu = ReplyKeyboardMarkup(
 return_to_menu = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(text='Назад в меню')
-    ]
-])
+    ],
+], resize_keyboard=True)
 
