@@ -25,17 +25,17 @@ async def cmd_mainmenu(message: Message):
 
 
 #================ПУНКТЫ ГЛАВНОГО МЕНЮ================
-@router.message(F.data=='applyToCity')
+@router.message(F.text=='Подать заявку 📄')
 async def cmd_applyToCity(message: Message):
     await message.answer(text='Коля Жепа 1', 
                          reply_markup=kb.return_to_menu)
     
-@router.message(F.data=='getSuit')
+@router.message(F.text=='Получить форму 👨‍✈️')
 async def cmd_applyToCity(message: Message):
     await message.answer(text='Коля Жепа 2', 
                          reply_markup=kb.return_to_menu)
 
-@router.message(F.data=='appealtoMayor')
+@router.message(F.text=='Обратиться к Мэру Города 💬')
 async def cmd_applyToCity(message: Message):
-    await message.answer(text='Коля Жепа 3', 
+    await message.answer(text='Мил Государь теперь Коля Жепа 3', 
                          reply_markup=kb.return_to_menu)
