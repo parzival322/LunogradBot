@@ -7,16 +7,16 @@ import asyncio
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text='Подать заявку 📄', callback_data="applyToCity")
+            KeyboardButton(text='Подать заявку 📄')
         ],
         [
-            KeyboardButton(text='Получить форму 👨‍✈️', callback_data="getSuit")
+            KeyboardButton(text='Получить форму 👨‍✈️')
         ],
         [
-            KeyboardButton(text='Обратиться к Мэру Города 💬', callback_data="appealtoMayor")
+            KeyboardButton(text='Обратиться к Мэру Города 💬')
         ]],
         resize_keyboard=True
 )
 
-return_to_menu = KeyboardButton(text='Назад в меню', callback_data="main_menu")
+return_to_menu = KeyboardButton(text='Назад в меню')
 
