@@ -154,7 +154,7 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
             f"--- \n"
             f"Отправил: @{message.from_user.username} (ID: {message.from_user.id})"
         )
-        
+
         try:
             for admin_id in os.environ.get("ADMIN_IDS"):
                 await bot.send_message(chat_id=admin_id, text=admin_text)
