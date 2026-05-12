@@ -44,10 +44,11 @@ async def cmd_applyToCity(message: Message, state: FSMContext):
 @router.message(NewPlayer.name)
 async def process_name(message: Message, state: FSMContext):
     if message.text == 'Назад в меню':
-        await message.answer('Заявка отменена', reply_markup=kb.main)
+        print('aboba')
         await state.clear()
         return
     else:
+        print('aboba2')
         await state.update_data(name=message.text)
         await state.set_state(NewPlayer.why)
         await message.answer("Вопрос 2: Почему именно вы?", reply_markup=kb.return_to_menu)
@@ -56,7 +57,6 @@ async def process_name(message: Message, state: FSMContext):
 @router.message(NewPlayer.why)
 async def process_why(message: Message, state: FSMContext):
     if message.text == 'Назад в меню':
-        await message.answer('Заявка отменена', reply_markup=kb.main)
         await state.clear()
         return
     else:
@@ -68,7 +68,6 @@ async def process_why(message: Message, state: FSMContext):
 @router.message(NewPlayer.sides)
 async def process_sides(message: Message, state: FSMContext):
     if message.text == 'Назад в меню':
-        await message.answer('Заявка отменена', reply_markup=kb.main)
         await state.clear()
         return
     else:
@@ -80,7 +79,6 @@ async def process_sides(message: Message, state: FSMContext):
 @router.message(NewPlayer.career)
 async def process_career(message: Message, state: FSMContext, bot: Bot):
     if message.text == 'Назад в меню':
-        await message.answer('Заявка отменена', reply_markup=kb.main)
         await state.clear()
         return
     else:
@@ -137,7 +135,6 @@ async def process_newmessageToMayor(message: Message, state: FSMContext):
         await state.update_data(user_messages=current_list)
         await message.answer(text=f'Ты можешь написать ещё текста или нажми на кнопку "Подтвердить" для завершения ввода \nВсего написано сообщений:{len(current_list)}', reply_markup=kb.accept_or_return_to_menu)
     else:
-        await message.answer('Обращение отменено', reply_markup=kb.main)
         await state.clear()
         return
 
@@ -167,6 +164,5 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
         
         await state.clear()
     else:
-        await message.answer('Обращение отменено', reply_markup=kb.main)
         await state.clear()
         return
