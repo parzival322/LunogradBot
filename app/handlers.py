@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart, Command, ChatMemberUpdatedFilter
 from aiogram.types import Message, CallbackQuery, ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from aiogram.filters.callback_data import CallbackData
 import os
 from dotenv import load_dotenv
 
@@ -31,6 +32,12 @@ async def cmd_start(message: Message):
 async def cmd_mainmenu(message: Message):
     await message.answer('Главное меню:', 
                          reply_markup=kb.main)
+
+@router.callback_query(F.data == 'main')
+async def cmd_mainmenu_callback(callback: CallbackQuery):
+    await callback.message.answer('Главное меню:',
+                         reply_markup=kb.main)
+    await callback.answer()
 
 @router.callback_query(F.data == 'cancel_fsm')
 async def cmd_cancel_fsm(callback: CallbackQuery, state: FSMContext):
@@ -101,13 +108,6 @@ async def process_career(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
 
 
-
-@router.message(F.text == 'Получить форму 👨‍✈️')
-async def cmd_getSuit(message: Message):
-    await message.answer(text='Форма Коля Жепа 2', 
-                         reply_markup=kb.return_to_menu)
-
-
 #================ОБРАЩЕНИЕ К МЭРУ================
 @router.message(F.text == 'Обратиться к Мэру Города 💬')
 async def cmd_appealtoMayor(message: Message, state: FSMContext):
@@ -116,7 +116,6 @@ async def cmd_appealtoMayor(message: Message, state: FSMContext):
 
     await message.answer(text='Привет! Вас приветствует бот секретарь Мэра Лунограда (Он оч занятой человек) \nНапишите ваше обращение к Мэру Лунограда. Мэр постарается вам ответить как можно скорее!')
     await message.answer(text='Что случилось?', reply_markup=kb.decline_operation)
-
 
 
 @router.message(AppealsToMayor.appeals)
@@ -153,3 +152,20 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
         print(f'Ошибка:{e}')
     
     await state.clear()
+
+
+#================ПОЛУЧЕНИЕ ФОРМЫ================
+@router.message(F.text == 'Получить форму 👨‍✈️')
+async def cmd_getSuit(message: Message):
+    await message.answer(text='Выберите форму из списка:',
+                         reply_markup=kb.suits_list)
+
+
+@router.callback_query(kb.Suit.filter(F.action=='list'))
+async def cmd_getSuit_callback(callback: CallbackQuery, callback_data: CallbackData):
+    await callback.message.answer(text='Выберите форму из списка:',
+                         reply_markup=kb.suits_list)
+
+'''@router.callback_query(kb.Suit.filter(F.action=='select'))
+async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData)
+'''
