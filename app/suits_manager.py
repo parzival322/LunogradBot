@@ -2,8 +2,10 @@ import os
 import json
 from PIL import Image
 
+
 DATA_DIR = './data'
 PERMISSIONS_FILE = './data/permissions.json'
+
 
 #================СПИСОК ФОРМ================
 def get_all_suits() -> dict:
@@ -27,6 +29,7 @@ def get_all_suits() -> dict:
                 print(f'Ошибка при чтении файлов: {e}')
 
     return suits
+
 
 #================УСТАНОВКА И ПРОВЕРКА ДОСТУПА================
 def set_access(user_id: int, suit_name: str, status: bool = True):
