@@ -3,13 +3,13 @@ import json
 from PIL import Image
 
 
-DATA_DIR = '/app/data'
+DATA_DIR = os.getenv('DATA_DIR', os.path.join(os.path.dirname(__file__),  'data') )
 
-PERMISSIONS_FILE = '/app/data/permissions.json'
+PERMISSIONS_FILE = os.getenv('PERMISSIONS_FILE', os.path.join(os.path.dirname(__file__), 'data/permissions.json') )
 
 
 #================СПИСОК ФОРМ================
-def get_all_suits() -> dict:
+def get_all_suits():
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
 
@@ -18,18 +18,21 @@ def get_all_suits() -> dict:
     for file in os.listdir(DATA_DIR):
         filename, ext = file.split('.')
 
+
         if ext.lower() == 'png':
             file_path = os.path.join(DATA_DIR, file)
+
             try:
+
                 with Image.open(file_path) as img:
                     w, h = img.size
 
+
                     if w == 64 and h == 64:
                         suits[filename] = file_path
+
             except Exception as e:
                 print(f'Ошибка при чтении файлов: {e}')
-
-    return suits
 
 
 #================УСТАНОВКА И ПРОВЕРКА ДОСТУПА================
