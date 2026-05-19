@@ -4,6 +4,7 @@ from PIL import Image
 
 
 DATA_DIR = '/app/data'
+
 PERMISSIONS_FILE = '/app/data/permissions.json'
 
 
@@ -18,7 +19,7 @@ def get_all_suits() -> dict:
         filename, ext = file.split('.')
 
         if ext.lower() == 'png':
-            file_path = os.path.join(DATA_DIR, filename)
+            file_path = os.path.join(DATA_DIR, file)
             try:
                 with Image.open(file_path) as img:
                     w, h = img.size
