@@ -104,7 +104,7 @@ def blend_skin_with_suit(skin_path: str, suit_path: str, output_path: str) -> st
         print(f'Возникла ошибка при смешивании {skin_path} и {suit_path} : \n {e}')
         return 'ERROR'
 
-
+#adsad
 
 
 

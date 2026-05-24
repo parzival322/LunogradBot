@@ -303,7 +303,7 @@ async def process_skin(message: Message, state: FSMContext, bot: Bot):
     else:
         await message.answer('Отправьте ваш скин в формате PNG и разрешением 64x64. Также при отправке выберите параметр БЕЗ СЖАТИЯ или ОТПРАВИТЬ КАК ДОКУМЕНТ')
 
-
+#adfsad
 
 
 
