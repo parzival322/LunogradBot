@@ -1,10 +1,11 @@
 from aiogram import F, Router, Bot
-from aiogram.filters import CommandStart, Command, ChatMemberUpdatedFilter
-from aiogram.types import Message, CallbackQuery, ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.filters import CommandStart
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters.callback_data import CallbackData
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +13,7 @@ load_dotenv()
 router = Router()
 
 import app.keyboards as kb
+import app.suits_manager as sm
 
 class NewPlayer(StatesGroup):
     name=State()
@@ -22,6 +24,12 @@ class NewPlayer(StatesGroup):
 
 class AppealsToMayor(StatesGroup):
     appeals=State()
+
+
+class Skin(StatesGroup):
+    suit_name=State()
+    save_path=State()
+
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
@@ -100,6 +108,8 @@ async def process_career(message: Message, state: FSMContext, bot: Bot):
             await bot.send_message(chat_id=admin_id, text=admin_text)
         await message.answer("Спасибо за заявку! В ближайшее время вам ответят в лс! ❤", reply_markup=kb.return_to_menu)
     except Exception as e:
+        admin_ids_str = os.environ.get("ADMIN_IDS", "")
+        admin_ids = [aid.strip() for aid in admin_ids_str.split(",") if aid.strip()]
         for admin_id in admin_ids:
             await bot.send_message(chat_id=admin_id, text=f"Отпиши Феде, произошла какая-то ошибка при ЗАПОЛНЕНИИ АНКЕТЫ у игрока @{message.from_user.username} (ID: {message.from_user.id})")
         await message.answer("Произошла какая-то ошибка, попробуйте заполнить анкету еще раз или ждите пока ошибкку исправят ❤🙏", reply_markup=kb.return_to_menu)
@@ -128,7 +138,7 @@ async def process_newmessageToMayor(message: Message, state: FSMContext):
     await message.answer(text=f'Ты можешь написать ещё текста или нажми на кнопку "Подтвердить" для завершения ввода \nВсего написано сообщений:{len(current_list)}', reply_markup=kb.accept_or_decline_sending_appealToMayor)
 
 @router.callback_query(F.data == 'accept_sending_appealToMayor')
-async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bot: Bot):
+async def endproccesing__messagesToMayor(callback: CallbackQuery, state: FSMContext, bot: Bot):
     messages_list = await state.get_data()
     current_list = messages_list.get("user_messages", [])
 
@@ -136,7 +146,7 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
         f"Новое обращение к Мэру!\n\n"
         f"❓ Обращение: {', '.join(current_list)}\n"
         f"--- \n"
-        f"Отправил: @{message.from_user.username} (ID: {message.from_user.id})"
+        f"Отправил: @{callback.message.from_user.username} (ID: {callback.message.from_user.id})"
     )
 
     try:
@@ -144,11 +154,13 @@ async def endproccesing__messagesToMayor(message: Message, state: FSMContext, bo
         admin_ids = [aid.strip() for aid in admin_ids_str.split(",") if aid.strip()]
         for admin_id in admin_ids:
             await bot.send_message(chat_id=admin_id, text=admin_text)
-        await message.answer("Спасибо за обращение! Мэр ответит вам в короткие сроки! ❤️", reply_markup=kb.return_to_menu)
+        await callback.message.answer("Спасибо за обращение! Мэр ответит вам в короткие сроки! ❤️", reply_markup=kb.return_to_menu)
     except Exception as e:
+        admin_ids_str = os.environ.get("ADMIN_IDS", "")
+        admin_ids = [aid.strip() for aid in admin_ids_str.split(",") if aid.strip()]
         for admin_id in admin_ids:
-            await bot.send_message(chat_id=admin_id, text=f"Отпиши Феде, произошла какая-то ошибка при ЗАПИСИ ОБРАЩЕНИЯ К МЭРУ у игрока @{message.from_user.username} (ID: {message.from_user.id})")
-        await message.answer("Произошла какая-то ошибка, попробуйте заполнить анкету еще раз или ждите пока ошибкку исправят ❤🙏", reply_markup=kb.return_to_menu)
+            await bot.send_message(chat_id=admin_id, text=f"Отпиши Феде, произошла какая-то ошибка при ЗАПИСИ ОБРАЩЕНИЯ К МЭРУ у игрока @{callback.message.from_user.username} (ID: {callback.message.from_user.id})")
+        await callback.message.answer("Произошла какая-то ошибка, попробуйте заполнить анкету еще раз или ждите пока ошибку исправят ❤🙏", reply_markup=kb.return_to_menu)
         print(f'Ошибка:{e}')
     
     await state.clear()
@@ -165,7 +177,136 @@ async def cmd_getSuit(message: Message):
 async def cmd_getSuit_callback(callback: CallbackQuery, callback_data: CallbackData):
     await callback.message.answer(text='Выберите форму из списка:',
                          reply_markup=kb.suits_list)
+    await callback.answer()
 
-'''@router.callback_query(kb.Suit.filter(F.action=='select'))
-async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData)
-'''
+@router.callback_query(kb.Suit.filter(F.action=='select'))
+async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    user = callback.from_user
+    if not sm.has_access(user_id=user.id, suit_name=callback_data['name']):
+
+        request_access_for_suit = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text='Запросить доступ',
+                                     callback_data=kb.Suit(action='ask-access',
+                                                           name=callback_data['name'],
+                                                           user_username=user.username,
+                                                           user_id=user.id).pack())
+            ],
+            [
+                InlineKeyboardButton(text='Назад',
+                                     callback_data=kb.Suit(action='list',
+                                                           name=callback_data['name'],
+                                                           user_username=user.username,
+                                                           user_id=user.id).pack())
+            ]
+        ])
+
+        await callback.message.edit_text(text='У Вас нет доступа к этой форме. Запросите доступ у Мэра',
+                                      reply_markup=request_access_for_suit)
+    else:
+        await state.set_state(Skin.suit_name)
+        await state.update_data(suit_name=callback_data['name'])
+        await state.set_state(Skin.save_path)
+        await callback.message.edit_text(text='Отправьте ваш скин в формате PNG и размером 64x64')
+        await callback.answer()
+
+
+@router.callback_query(kb.Suit.filter(F.action=='ask-access'))
+async def askSuit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
+
+    give_access_for_suit = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text='Дать доступ',
+                                 callback_data=kb.Suit(action='allow-access',
+                                                       name=callback_data['name'],
+                                                       user_username=callback_data['user_username'],
+                                                       user_id=callback_data['user_id']).pack())
+        ],
+        [
+            InlineKeyboardButton(text='Отказать',
+                                 callback_data=kb.Suit(action='deny-access',
+                                                       name=callback_data['name'],
+                                                       user_username=callback_data['user_username'],
+                                                       user_id=callback_data['user_id']).pack())
+        ]
+    ])
+
+    admin_ids_str = os.environ.get("ADMIN_IDS", "")
+    admin_ids = [aid.strip() for aid in admin_ids_str.split(",") if aid.strip()]
+    for admin_id in admin_ids:
+        await bot.send_message(chat_id=admin_id,
+                               text=f"Пользователь @{callback.from_user.username} (ID: {callback.from_user.id}) запрашивает доступ на форму {callback_data['name']}. Выберите действие:", reply_markup=give_access_for_suit)
+    await callback.answer()
+
+
+@router.callback_query(kb.Suit.filter(F.action=='allow-access'))
+async def Allow_access_to_Suit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
+    status_of_allowing_access = sm.set_access(user_id=callback_data['user_id'], suit_name=callback_data['name'], allow=True)
+
+    if status_of_allowing_access == 'OK':
+        await callback.message.edit_text(text=f"Вы успешно выдали доступ @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+
+        await bot.send_message(chat_id=callback_data['user_id'], text=f"ЦАРЬ-БАТЮШКА утвердительно ответил на вашу челобитную с просьбой о форме {callback_data['name']}")
+    else:
+        await callback.message.edit_text(
+            text=f"Произошла ошибка при выдаче доступа @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+
+    await callback.answer()
+
+
+@router.callback_query(kb.Suit.filter(F.action=='deny-access'))
+async def Deny_access_to_suit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
+    await callback.message.edit_text(
+        text=f"Вы отказали в доступе @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+
+    await bot.send_message(chat_id=callback_data['user_id'],
+                           text=f"ЦАРЬ-БАТЮШКА отрицательно ответил на вашу челобитную с просьбой о форме {callback_data['name']}. Вы теперь иноагент и враг Лунограда")
+
+    await callback.answer()
+
+
+#================ОБРАБОТКА СКИНА================
+@router.message(Skin.save_path)
+async def process_skin(message: Message, state: FSMContext, bot: Bot):
+    if message.document and message.document.file_name.lower().endswith('.png'):
+        skin_file_id = message.document.file_id
+        skin_file_name = message.document.file_name
+        if not os.path.exists(sm.TEMP_DIR):
+            os.makedirs(sm.TEMP_DIR)
+        skin_path = os.path.join(sm.TEMP_DIR, skin_file_name)
+        await bot.download(skin_file_id, destination=skin_path)
+
+        await state.update_data(save_path=skin_path)
+        data = await state.get_data()
+
+        suit_name = data['suit_name']
+        suit_file = suit_name + '.png'
+        suit_path = sm.DATA_DIR+f'/{suit_file}'
+
+        output_path = sm.RESULTS_DIR+f"/{skin_file_name.split('.')[0]}_{suit_name}.png"
+
+        result = sm.blend_skin_with_suit(skin_path=skin_path, suit_path=suit_path, output_path=output_path)
+
+        if result == 'OK':
+            from aiogram.types import FSInputFile
+            document_to_send = FSInputFile(output_path)
+
+            await bot.send_document(chat_id=message.chat.id, document=document_to_send)
+            await message.answer('На ваш скин была успешно надета форма, пользуйтесь с удовольствием!')
+
+            await state.clear()
+
+            if os.path.exists(skin_path):
+                os.remove(skin_path)
+        else:
+            await message.answer('Произошла какая-то ошибка при обработке скина')
+    else:
+        await message.answer('Отправьте ваш скин в формате PNG и разрешением 64x64. Также при отправке выберите параметр БЕЗ СЖАТИЯ или ОТПРАВИТЬ КАК ДОКУМЕНТ')
+
+
+
+
+
+
+
+

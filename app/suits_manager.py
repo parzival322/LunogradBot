@@ -7,13 +7,17 @@ DATA_DIR = os.getenv('DATA_DIR', os.path.join(os.path.dirname(__file__),  'data'
 
 PERMISSIONS_FILE = os.getenv('PERMISSIONS_FILE', os.path.join(os.path.dirname(__file__), 'data/permissions.json') )
 
+TEMP_DIR = os.getenv('TEMP_DIR', os.path.join(os.path.dirname(__file__),  'data/temp') )
+
+RESULTS_DIR = os.getenv('RESULTS_DIR', os.path.join(os.path.dirname(__file__),  'data/results') )
+
 
 #================СПИСОК ФОРМ================
-def get_all_suits():
+def get_all_suits() -> list:
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
 
-    suits = {}
+    suits = []
 
     for file in os.listdir(DATA_DIR):
         filename, ext = file.split('.')
@@ -28,7 +32,7 @@ def get_all_suits():
                     w, h = img.size
 
                     if w == 64 and h == 64:
-                        suits[filename] = file_path
+                        suits.append(filename)
 
             except Exception as e:
                 print(f'Ошибка при чтении файлов: {e}')
@@ -37,7 +41,7 @@ def get_all_suits():
 
 
 #================УСТАНОВКА И ПРОВЕРКА ДОСТУПА================
-def set_access(user_id: int, suit_name: str, status: bool = True):
+def set_access(user_id: int, suit_name: str, allow: bool = True):
     if os.path.exists(PERMISSIONS_FILE):
         with open(PERMISSIONS_FILE, mode='r', encoding='utf-8') as f:
             try:
@@ -45,23 +49,26 @@ def set_access(user_id: int, suit_name: str, status: bool = True):
                 f.close()
             except Exception as e:
                 print(f'Ошибка при чтении доступов: {e}')
+                return "ERROR"
 
         user_key = str(user_id)
 
         if user_key not in data:
             data[user_key] = []
 
-        if suit_name and status not in data[user_key]:
+        if suit_name not in data[user_key] and allow:
             data[user_key].append(suit_name)
-        if suit_name in data[user_key] and not status:
+        if suit_name in data[user_key] and not allow:
             data[user_key].remove(suit_name)
 
         with open(PERMISSIONS_FILE, mode='w', encoding='utf-8') as f:
             try:
                 json.dump(data, f, ensure_ascii=False, indent=4)
                 f.close()
+                return "OK"
             except Exception as e:
                 print(f'Ошибка при установке доступов: {e}')
+                return "ERROR"
 
 
 def has_access(user_id: int, suit_name: str):
@@ -80,5 +87,24 @@ def has_access(user_id: int, suit_name: str):
             return suit_name in data[user_key]
 
 
-#================ГРАФИЧЕСКАЯ ОБРАБОТКА================
+#================ОБРАБОТКА СКИНА================
+def blend_skin_with_suit(skin_path: str, suit_path: str, output_path: str) -> str:
+    skin = Image.open(skin_path).convert("RGBA")
+    suit = Image.open(suit_path).convert("RGBA")
+
+    try:
+        result = Image.alpha_composite(skin, suit)
+
+        result.save(output_path, "PNG")
+
+        print(f'Успешное смешивание {skin_path} и {suit_path}')
+
+        return 'OK'
+    except Exception as e:
+        print(f'Возникла ошибка при смешивании {skin_path} и {suit_path} : \n {e}')
+        return 'ERROR'
+
+
+
+
 

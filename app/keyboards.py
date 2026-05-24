@@ -1,11 +1,12 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-import asyncio
 import app.suits_manager as sm
  
 class Suit(CallbackData, prefix="suit"):
+    user_id: int
+    user_username: str
     name: str
     action: str
 
@@ -47,18 +48,23 @@ accept_or_decline_sending_appealToMayor = InlineKeyboardMarkup(inline_keyboard=[
     ],
 ])
 
+
 def suits_list_builder():
     builder = InlineKeyboardBuilder()
     suits = sm.get_all_suits()
-    for name, path in suits.items():
+    for name in suits:
         builder.add(InlineKeyboardButton(text=name,
                                                callback_data=Suit(action='select',
-                                                                  name=name).pack()
+                                                                  name=name,
+                                                                  user_username='',
+                                                                  user_id=0).pack()
                                                ))
-    builder.adjust(1)
 
     builder.add(InlineKeyboardButton(text='Назад в меню', callback_data='main'))
+
+    builder.adjust(1)
 
     return builder.as_markup()
 
 suits_list = suits_list_builder()
+
