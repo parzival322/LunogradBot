@@ -182,7 +182,8 @@ async def cmd_getSuit_callback(callback: CallbackQuery, callback_data: CallbackD
 @router.callback_query(kb.Suit.filter(F.action=='select'))
 async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
     user = callback.from_user
-    if not sm.has_access(user_id=user.id, suit_name=callback_data['name']):
+    suit_name = callback_data['name']
+    if not sm.has_access(user_id=user.id, suit_name=suit_name):
 
         request_access_for_suit = InlineKeyboardMarkup(inline_keyboard=[
             [
@@ -205,7 +206,7 @@ async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData, st
                                       reply_markup=request_access_for_suit)
     else:
         await state.set_state(Skin.suit_name)
-        await state.update_data(suit_name=callback_data['name'])
+        await state.update_data(suit_name=suit_name)
         await state.set_state(Skin.save_path)
         await callback.message.edit_text(text='Отправьте ваш скин в формате PNG и размером 64x64')
         await callback.answer()
@@ -302,11 +303,3 @@ async def process_skin(message: Message, state: FSMContext, bot: Bot):
             await message.answer('Произошла какая-то ошибка при обработке скина')
     else:
         await message.answer('Отправьте ваш скин в формате PNG и разрешением 64x64. Также при отправке выберите параметр БЕЗ СЖАТИЯ или ОТПРАВИТЬ КАК ДОКУМЕНТ')
-
-#adfsad
-
-
-
-
-
-
