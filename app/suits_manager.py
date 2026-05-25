@@ -49,7 +49,7 @@ def set_access(user_id: int, suit_name: str, allow: bool = True):
                 f.close()
             except Exception as e:
                 print(f'Ошибка при чтении доступов: {e}')
-                return "ERROR"
+                return ["ERROR", 1]
 
         user_key = str(user_id)
 
@@ -65,10 +65,10 @@ def set_access(user_id: int, suit_name: str, allow: bool = True):
             try:
                 json.dump(data, f, ensure_ascii=False, indent=4)
                 f.close()
-                return "OK"
+                return ["OK", 0]
             except Exception as e:
                 print(f'Ошибка при установке доступов: {e}')
-                return "ERROR"
+                return ["ERROR", 2]
 
 
 def has_access(user_id: int, suit_name: str):

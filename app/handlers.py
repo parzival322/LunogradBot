@@ -239,13 +239,19 @@ async def askSuit(callback: CallbackQuery, callback_data: kb.Suit, bot: Bot):
 async def Allow_access_to_Suit(callback: CallbackQuery, callback_data: kb.Suit, bot: Bot):
     status_of_allowing_access = sm.set_access(user_id=callback_data.user_id, suit_name=callback_data.name, allow=True)
 
-    if status_of_allowing_access == 'OK':
+    if status_of_allowing_access[0] == 'OK':
         await callback.message.edit_text(text=f"Вы успешно выдали доступ <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}")
 
         await bot.send_message(chat_id=callback_data.user_id, text=f"ЦАРЬ-БАТЮШКА утвердительно ответил на вашу челобитную с просьбой о форме {callback_data.name}")
-    else:
-        await callback.message.edit_text(
-            text=f"Произошла ошибка при выдаче доступа <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}", parse_mode="HTML")
+    elif status_of_allowing_access[0] == "ERROR":
+        if status_of_allowing_access[1] == 1:
+            await callback.message.edit_text(
+                text=f"Произошла ошибка 1 при выдаче доступа <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}",
+                parse_mode="HTML")
+        elif status_of_allowing_access[1] == 2:
+            await callback.message.edit_text(
+                text=f"Произошла ошибка 2 при выдаче доступа <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}",
+                parse_mode="HTML")
 
     await callback.answer()
 
