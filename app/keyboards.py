@@ -67,5 +67,3 @@ def suits_list_builder():
     return builder.as_markup()
 
 suits_list = suits_list_builder()
-
-#adsadsa

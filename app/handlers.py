@@ -174,29 +174,29 @@ async def cmd_getSuit(message: Message):
 
 
 @router.callback_query(kb.Suit.filter(F.action=='list'))
-async def cmd_getSuit_callback(callback: CallbackQuery, callback_data: CallbackData):
+async def cmd_getSuit_callback(callback: CallbackQuery):
     await callback.message.answer(text='Выберите форму из списка:',
                          reply_markup=kb.suits_list)
     await callback.answer()
 
 @router.callback_query(kb.Suit.filter(F.action=='select'))
-async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+async def selected_Suit(callback: CallbackQuery, callback_data: kb.Suit, state: FSMContext):
     user = callback.from_user
-    suit_name = callback_data['name']
+    suit_name = callback_data.name
     if not sm.has_access(user_id=user.id, suit_name=suit_name):
 
         request_access_for_suit = InlineKeyboardMarkup(inline_keyboard=[
             [
                 InlineKeyboardButton(text='Запросить доступ',
                                      callback_data=kb.Suit(action='ask-access',
-                                                           name=callback_data['name'],
+                                                           name=callback_data.name,
                                                            user_username=user.username,
                                                            user_id=user.id).pack())
             ],
             [
                 InlineKeyboardButton(text='Назад',
                                      callback_data=kb.Suit(action='list',
-                                                           name=callback_data['name'],
+                                                           name=callback_data.name,
                                                            user_username=user.username,
                                                            user_id=user.id).pack())
             ]
@@ -213,22 +213,22 @@ async def selected_Suit(callback: CallbackQuery, callback_data: CallbackData, st
 
 
 @router.callback_query(kb.Suit.filter(F.action=='ask-access'))
-async def askSuit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
+async def askSuit(callback: CallbackQuery, callback_data: kb.Suit, bot: Bot):
 
     give_access_for_suit = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text='Дать доступ',
                                  callback_data=kb.Suit(action='allow-access',
-                                                       name=callback_data['name'],
-                                                       user_username=callback_data['user_username'],
-                                                       user_id=callback_data['user_id']).pack())
+                                                       name=callback_data.name,
+                                                       user_username=callback_data.user_username,
+                                                       user_id=callback_data.user_id).pack())
         ],
         [
             InlineKeyboardButton(text='Отказать',
                                  callback_data=kb.Suit(action='deny-access',
-                                                       name=callback_data['name'],
-                                                       user_username=callback_data['user_username'],
-                                                       user_id=callback_data['user_id']).pack())
+                                                       name=callback_data.name,
+                                                       user_username=callback_data.user_username,
+                                                       user_id=callback_data.user_id).pack())
         ]
     ])
 
@@ -236,32 +236,32 @@ async def askSuit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot
     admin_ids = [aid.strip() for aid in admin_ids_str.split(",") if aid.strip()]
     for admin_id in admin_ids:
         await bot.send_message(chat_id=admin_id,
-                               text=f"Пользователь @{callback.from_user.username} (ID: {callback.from_user.id}) запрашивает доступ на форму {callback_data['name']}. Выберите действие:", reply_markup=give_access_for_suit)
+                               text=f"Пользователь @{callback.from_user.username} (ID: {callback.from_user.id}) запрашивает доступ на форму {callback_data.name}. Выберите действие:", reply_markup=give_access_for_suit)
     await callback.answer()
 
 
 @router.callback_query(kb.Suit.filter(F.action=='allow-access'))
-async def Allow_access_to_Suit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
-    status_of_allowing_access = sm.set_access(user_id=callback_data['user_id'], suit_name=callback_data['name'], allow=True)
+async def Allow_access_to_Suit(callback: CallbackQuery, callback_data: kb.Suit, bot: Bot):
+    status_of_allowing_access = sm.set_access(user_id=callback_data.user_id, suit_name=callback_data.name, allow=True)
 
     if status_of_allowing_access == 'OK':
-        await callback.message.edit_text(text=f"Вы успешно выдали доступ @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+        await callback.message.edit_text(text=f"Вы успешно выдали доступ @{callback_data.user_username} (ID : {callback_data.user_id}) к форме {callback_data.name}")
 
-        await bot.send_message(chat_id=callback_data['user_id'], text=f"ЦАРЬ-БАТЮШКА утвердительно ответил на вашу челобитную с просьбой о форме {callback_data['name']}")
+        await bot.send_message(chat_id=callback_data.user_id, text=f"ЦАРЬ-БАТЮШКА утвердительно ответил на вашу челобитную с просьбой о форме {callback_data.name}")
     else:
         await callback.message.edit_text(
-            text=f"Произошла ошибка при выдаче доступа @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+            text=f"Произошла ошибка при выдаче доступа @{callback_data.user_username} (ID : {callback_data.user_id}) к форме {callback_data.name}")
 
     await callback.answer()
 
 
 @router.callback_query(kb.Suit.filter(F.action=='deny-access'))
-async def Deny_access_to_suit(callback: CallbackQuery, callback_data: CallbackData, bot: Bot):
+async def Deny_access_to_suit(callback: CallbackQuery, callback_data: kb.Suit, bot: Bot):
     await callback.message.edit_text(
-        text=f"Вы отказали в доступе @{callback_data['user_username']} (ID : {callback_data['user_id']}) к форме {callback_data['name']}")
+        text=f"Вы отказали в доступе @{callback_data.user_username} (ID : {callback_data.user_id}) к форме {callback_data.name}")
 
-    await bot.send_message(chat_id=callback_data['user_id'],
-                           text=f"ЦАРЬ-БАТЮШКА отрицательно ответил на вашу челобитную с просьбой о форме {callback_data['name']}. Вы теперь иноагент и враг Лунограда")
+    await bot.send_message(chat_id=callback_data.user_id,
+                           text=f"ЦАРЬ-БАТЮШКА отрицательно ответил на вашу челобитную с просьбой о форме {callback_data.name}. Вы теперь иноагент и враг Лунограда")
 
     await callback.answer()
 
