@@ -240,7 +240,7 @@ async def Allow_access_to_Suit(callback: CallbackQuery, callback_data: kb.Suit, 
     status_of_allowing_access = sm.set_access(user_id=callback_data.user_id, suit_name=callback_data.name, allow=True)
 
     if status_of_allowing_access[0] == 'OK':
-        await callback.message.edit_text(text=f"Вы успешно выдали доступ <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}")
+        await callback.message.edit_text(text=f"Вы успешно выдали доступ <a href='tg://user?id={callback_data.user_id}'>Пользователь</a> (ID : {callback_data.user_id}) к форме {callback_data.name}", parse_mode="HTML")
 
         await bot.send_message(chat_id=callback_data.user_id, text=f"ЦАРЬ-БАТЮШКА утвердительно ответил на вашу челобитную с просьбой о форме {callback_data.name}")
     elif status_of_allowing_access[0] == "ERROR":
